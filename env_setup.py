@@ -2,17 +2,23 @@ import os
 import sys
 from datetime import datetime
 
+"""
+Run command generate windows variables from properties file: python3 ./env_setup.py export_bat
+Run command generate linux variables from properties file: python3 ./env_setup.py export_shell
+Run commad output variables from properties file: python3 ./env_setup.py output_env
+"""
+
 def logger(level, message):
     text = "[" + datetime.now().strftime('%Y-%m-%d %H:%M:%S') + "] [" + level+ "] " + message
     if level == 'INFO':
-        print("\033[32m{}".format(text))
+        print("\033[32m{}\033[0m".format(text))
     if level == 'ERROR':    
-        print("\033[31m{}".format(text))
+        print("\033[31m{}\033[0m".format(text))
     if level == 'WARN':
-        print("\033[33m{}".format(text))
+        print("\033[33m{}\033[0m".format(text))
 
 def read_properties(filepatch, sep='=', comment_char='#'):
-    props = {}
+    props = []
     logger('INFO', 'Читаем файл ' + filepatch)
     with open(filepatch, "rt") as f:
         for line in f:
@@ -21,17 +27,17 @@ def read_properties(filepatch, sep='=', comment_char='#'):
                 key_value = l.split(sep)
                 key = key_value[0].strip()
                 value = sep.join(key_value[1:]).strip().strip('"')
-                props[key]=value
+                props.append([key, value])
     logger('INFO', 'Файл ' + filepatch + ' прочитан')
     return props
 
 def set_env(props):
-    for key, value in props.items():
-        os.environ[key] = value
+    for item in props:
+        os.environ[item[0]] = item[1]
 
 def output_env(props):
-    for key, value in props.items():
-        logger('INFO', key + "=" + value)
+    for item in props:
+        logger('INFO', item[0] + "=" + item[1])
 
 def write_variables_to_file(file_path_output, variables_export):
     logger('INFO', 'Запись переменных окружения в файл ' + file_path_output + ' начата')
@@ -43,16 +49,16 @@ def write_variables_to_file(file_path_output, variables_export):
 def generate_export_variables_to_shell(props, file_path_output='./export_sh.sh'):
     export_variable_shell=[]
     logger('INFO', 'Генерируем переменные окружения для linux')
-    for key, value in props.items():
-        export_variable_shell.append("EXPORT " + key + "=" + value)
+    for item in props:
+        export_variable_shell.append("export " + item[0] + "=" + item[1])
     write_variables_to_file(file_path_output, export_variable_shell)
     logger('INFO', 'Генерация переменных окружения для linux завершена')
 
 def generate_export_variables_to_bat(props, file_path_output='./export_bat.bat'):
     export_variable_bat=[]
     logger('INFO', 'Генерируем переменные окружения для windows')
-    for key, value in props.items():
-        export_variable_bat.append("SET " + key + "=" + value)
+    for item in props:
+        export_variable_bat.append("SET " + item[0] + "=" + item[1])
     write_variables_to_file(file_path_output, export_variable_bat)
     logger('INFO', 'Генерация переменных окружения для windows завершена')
 
